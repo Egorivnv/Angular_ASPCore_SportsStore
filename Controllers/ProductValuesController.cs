@@ -54,40 +54,50 @@ namespace SportsStore.Controllers
     }
 
     [HttpGet]
-    public IEnumerable<Product> GetProducts(string category, string search, bool related = false)
+    public IActionResult GetProducts(string category, string search, bool related = false, bool metadata = false)
     {
-      IQueryable<Product> query = context.Products;
-      if (!string.IsNullOrWhiteSpace(category))
-      {
-        string catLower = category.ToLower();
-        query = query.Where(p => p.Category.ToLower().Contains(catLower));
-      }
-      if (!string.IsNullOrWhiteSpace(search))
-      {
-        string searchLower = search.ToLower();
-        query = query.Where(p => p.Name.ToLower().Contains(searchLower)
-        || p.Description.ToLower().Contains(searchLower));
-      }
-      if (related)
-      {
-        query = query.Include(p => p.Supplier).Include(p => p.Ratings);
-        List<Product> data = query.ToList();
-        data.ForEach(p => {
-          if (p.Supplier != null)
+        IQueryable<Product> query = context.Products;
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+          string catLower = category.ToLower();
+          query = query.Where(p => p.Category.ToLower().Contains(catLower));
+        }
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+          string searchLower = search.ToLower();
+          query = query.Where(p => p.Name.ToLower().Contains(searchLower)
+          || p.Description.ToLower().Contains(searchLower));
+        }
+        if (related)
+        {
+          query = query.Include(p => p.Supplier).Include(p => p.Ratings);
+          List<Product> data = query.ToList();
+          data.ForEach(p =>
           {
-            p.Supplier.Products = null;
-          }
-          if (p.Ratings != null)
-          {
-            p.Ratings.ForEach(r => r.Product = null);
-          }
+            if (p.Supplier != null)
+            {
+              p.Supplier.Products = null;
+            }
+            if (p.Ratings != null)
+            {
+              p.Ratings.ForEach(r => r.Product = null);
+            }
+          });
+          return metadata ? CreateMetadata(data) : Ok(data);
+        }
+        else
+        {
+          return metadata ? CreateMetadata(query) : Ok(query);
+        }
+    }
+
+    private IActionResult CreateMetadata(IEnumerable<Product> products)
+    { 
+        return Ok(new
+        {
+          data = products,
+          categories = context.Products.Select(p => p.Category).Distinct().OrderBy(c => c)
         });
-        return data;
-      }
-      else
-      {
-        return query;
-      }
     }
 
     [HttpPost]

@@ -3,15 +3,20 @@ import { Injectable } from "@angular/core";
 import { Http, RequestMethod, Request, Response } from "@angular/http";
 import { Observable } from "rxjs/Observable";
 import "rxjs/add/operator/map";
-import { Filter } from "./configClasses.repository";
+import { Filter, Pagination } from "./configClasses.repository";
 import { Supplier } from "./supplier.model";
+import { Order } from "./order.model";
+import { ErrorHandlerService, ValidationError } from "../errorHandler.service";
+import "rxjs/add/operator/catch";
 
 const productsUrl = "/api/products";
 const suppliersUrl = "/api/suppliers";
+const ordersUrl = "/api/orders";
 
 @Injectable()
 export class Repository {
     private filterObject = new Filter();
+    private paginationObject = new Pagination();
 
     constructor(private http: Http) {
       //this.filter.category = "soccer";
@@ -20,7 +25,7 @@ export class Repository {
     }
     getProduct(id: number) {
       this.sendRequest(RequestMethod.Get, productsUrl + "/" + id)
-        .subscribe(response => { this.product = response.json(); });
+        .subscribe(response => this.product = response);
     }
 
     getProducts() {
@@ -31,8 +36,15 @@ export class Repository {
       if (this.filter.search) {
         url += "&search=" + this.filter.search;
       }
+      url += "&metadata=true";
+
       this.sendRequest(RequestMethod.Get, url)
-        .subscribe(response => this.products = response);
+        .subscribe(response => {
+          this.products = response.data;
+          this.categories = response.categories;
+          this.pagination.currentPage = 1;
+        });
+
     }
 
     getSuppliers() {
@@ -114,14 +126,55 @@ export class Repository {
       })).map(response => {
         return response.headers.get("Content-Length") != "0"
           ? response.json() : null;
+        })
+        .catch((errorResponse: Response) => {
+          if (errorResponse.status == 400) {
+            let jsonData: string;
+            try {
+              jsonData = errorResponse.json();
+            } catch (e) {
+              throw new Error("Network Error");
+            }
+            let messages = Object.getOwnPropertyNames(jsonData)
+              .map(p => jsonData[p]);
+            throw new ValidationError(messages);
+          }
+          throw new Error("Network Error");
         });
+    }
+
+    getOrders() {
+      this.sendRequest(RequestMethod.Get, ordersUrl)
+        .subscribe(data => this.orders = data);
+    }
+    createOrder(order: Order) {
+      this.sendRequest(RequestMethod.Post, ordersUrl, {
+        name: order.name,
+        address: order.address,
+        payment: order.payment,
+        products: order.products
+      }).subscribe(data => {
+        order.orderConfirmation = data
+        order.cart.clear();
+        order.clear();
+      });
+    }
+    shipOrder(order: Order) {
+      this.sendRequest(RequestMethod.Post, ordersUrl + "/" + order.orderId)
+        .subscribe(r => this.getOrders())
     }
 
     product: Product;
     products: Product[];
     suppliers: Supplier[] = [];
+    categories: string[] = [];
+    orders: Order[] = [];
 
     get filter(): Filter {
       return this.filterObject;
+    }
+
+    get pagination(): Pagination {
+      return this.paginationObject;
     }
 }
