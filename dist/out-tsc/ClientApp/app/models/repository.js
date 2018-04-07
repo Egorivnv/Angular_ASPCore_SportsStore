@@ -13,8 +13,11 @@ var core_1 = require("@angular/core");
 var http_1 = require("@angular/http");
 require("rxjs/add/operator/map");
 var configClasses_repository_1 = require("./configClasses.repository");
+var errorHandler_service_1 = require("../errorHandler.service");
+require("rxjs/add/operator/catch");
 var productsUrl = "/api/products";
 var suppliersUrl = "/api/suppliers";
+var ordersUrl = "/api/orders";
 var Repository = /** @class */ (function () {
     function Repository(http) {
         this.http = http;
@@ -22,6 +25,7 @@ var Repository = /** @class */ (function () {
         this.paginationObject = new configClasses_repository_1.Pagination();
         this.suppliers = [];
         this.categories = [];
+        this.orders = [];
         //this.filter.category = "soccer";
         this.filter.related = true;
         this.getProducts();
@@ -127,7 +131,44 @@ var Repository = /** @class */ (function () {
         })).map(function (response) {
             return response.headers.get("Content-Length") != "0"
                 ? response.json() : null;
+        })
+            .catch(function (errorResponse) {
+            if (errorResponse.status == 400) {
+                var jsonData_1;
+                try {
+                    jsonData_1 = errorResponse.json();
+                }
+                catch (e) {
+                    throw new Error("Network Error");
+                }
+                var messages = Object.getOwnPropertyNames(jsonData_1)
+                    .map(function (p) { return jsonData_1[p]; });
+                throw new errorHandler_service_1.ValidationError(messages);
+            }
+            throw new Error("Network Error");
         });
+    };
+    Repository.prototype.getOrders = function () {
+        var _this = this;
+        this.sendRequest(http_1.RequestMethod.Get, ordersUrl)
+            .subscribe(function (data) { return _this.orders = data; });
+    };
+    Repository.prototype.createOrder = function (order) {
+        this.sendRequest(http_1.RequestMethod.Post, ordersUrl, {
+            name: order.name,
+            address: order.address,
+            payment: order.payment,
+            products: order.products
+        }).subscribe(function (data) {
+            order.orderConfirmation = data;
+            order.cart.clear();
+            order.clear();
+        });
+    };
+    Repository.prototype.shipOrder = function (order) {
+        var _this = this;
+        this.sendRequest(http_1.RequestMethod.Post, ordersUrl + "/" + order.orderId)
+            .subscribe(function (r) { return _this.getOrders(); });
     };
     Object.defineProperty(Repository.prototype, "filter", {
         get: function () {

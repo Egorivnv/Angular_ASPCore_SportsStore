@@ -10,33 +10,32 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var core_1 = require("@angular/core");
-var errorHandler_service_1 = require("./errorHandler.service");
-var AppComponent = /** @class */ (function () {
-    function AppComponent(errorHandler) {
-        var _this = this;
-        errorHandler.errors.subscribe(function (error) {
-            _this.lastError = error;
-        });
+var repository_1 = require("../models/repository");
+var OverviewComponent = /** @class */ (function () {
+    function OverviewComponent(repo) {
+        this.repo = repo;
     }
-    Object.defineProperty(AppComponent.prototype, "error", {
+    Object.defineProperty(OverviewComponent.prototype, "products", {
         get: function () {
-            return this.lastError;
+            return this.repo.products;
         },
         enumerable: true,
         configurable: true
     });
-    AppComponent.prototype.clearError = function () {
-        this.lastError = null;
-    };
-    AppComponent = __decorate([
+    Object.defineProperty(OverviewComponent.prototype, "orders", {
+        get: function () {
+            return this.repo.orders;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    OverviewComponent = __decorate([
         core_1.Component({
-            selector: 'app-root',
-            templateUrl: './app.component.html',
-            styleUrls: ['./app.component.css']
+            templateUrl: "overview.component.html"
         }),
-        __metadata("design:paramtypes", [errorHandler_service_1.ErrorHandlerService])
-    ], AppComponent);
-    return AppComponent;
+        __metadata("design:paramtypes", [repository_1.Repository])
+    ], OverviewComponent);
+    return OverviewComponent;
 }());
-exports.AppComponent = AppComponent;
-//# sourceMappingURL=app.component.js.map
+exports.OverviewComponent = OverviewComponent;
+//# sourceMappingURL=overview.component.js.map

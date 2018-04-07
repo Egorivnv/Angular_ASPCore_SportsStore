@@ -17,6 +17,14 @@ var model_module_1 = require("./models/model.module");
 //import { ProductDetailComponent } from "./structure/productDetail.component";
 var app_routing_1 = require("./app.routing");
 var store_module_1 = require("./store/store.module");
+var admin_module_1 = require("./admin/admin.module");
+var core_2 = require("@angular/core");
+var errorHandler_service_1 = require("./errorHandler.service");
+var eHandler = new errorHandler_service_1.ErrorHandlerService();
+function handler() {
+    return eHandler;
+}
+exports.handler = handler;
 var AppModule = /** @class */ (function () {
     function AppModule() {
     }
@@ -24,8 +32,11 @@ var AppModule = /** @class */ (function () {
         core_1.NgModule({
             declarations: [app_component_1.AppComponent],
             imports: [platform_browser_1.BrowserModule, forms_1.FormsModule, http_1.HttpModule, model_module_1.ModelModule,
-                app_routing_1.RoutingConfig, store_module_1.StoreModule],
-            providers: [],
+                app_routing_1.RoutingConfig, store_module_1.StoreModule, admin_module_1.AdminModule],
+            providers: [
+                { provide: errorHandler_service_1.ErrorHandlerService, useFactory: handler },
+                { provide: core_2.ErrorHandler, useFactory: handler }
+            ],
             bootstrap: [app_component_1.AppComponent]
         })
     ], AppModule);

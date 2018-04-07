@@ -10,33 +10,28 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var core_1 = require("@angular/core");
-var errorHandler_service_1 = require("./errorHandler.service");
-var AppComponent = /** @class */ (function () {
-    function AppComponent(errorHandler) {
-        var _this = this;
-        errorHandler.errors.subscribe(function (error) {
-            _this.lastError = error;
-        });
+var repository_1 = require("../models/repository");
+var OrderAdminComponent = /** @class */ (function () {
+    function OrderAdminComponent(repo) {
+        this.repo = repo;
     }
-    Object.defineProperty(AppComponent.prototype, "error", {
+    Object.defineProperty(OrderAdminComponent.prototype, "orders", {
         get: function () {
-            return this.lastError;
+            return this.repo.orders;
         },
         enumerable: true,
         configurable: true
     });
-    AppComponent.prototype.clearError = function () {
-        this.lastError = null;
+    OrderAdminComponent.prototype.markShipped = function (order) {
+        this.repo.shipOrder(order);
     };
-    AppComponent = __decorate([
+    OrderAdminComponent = __decorate([
         core_1.Component({
-            selector: 'app-root',
-            templateUrl: './app.component.html',
-            styleUrls: ['./app.component.css']
+            templateUrl: "orderAdmin.component.html"
         }),
-        __metadata("design:paramtypes", [errorHandler_service_1.ErrorHandlerService])
-    ], AppComponent);
-    return AppComponent;
+        __metadata("design:paramtypes", [repository_1.Repository])
+    ], OrderAdminComponent);
+    return OrderAdminComponent;
 }());
-exports.AppComponent = AppComponent;
-//# sourceMappingURL=app.component.js.map
+exports.OrderAdminComponent = OrderAdminComponent;
+//# sourceMappingURL=orderAdmin.component.js.map
